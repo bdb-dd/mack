@@ -151,33 +151,107 @@ function parseCode(element: marked.Tokens.Code): SectionBlock {
 function parseList(
   element: marked.Tokens.List,
   options: ListOptions = {}
-): SectionBlock {
+): SectionBlock[] {
   let index = 0;
-  const contents = element.items.map(item => {
-    const paragraph = item.tokens[0] as marked.Tokens.Text;
-    if (!paragraph || paragraph.type !== 'text' || !paragraph.tokens?.length) {
-      return paragraph?.text || '';
-    }
 
-    const text = paragraph.tokens
-      .filter(
-        (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
-          child.type !== 'image'
-      )
-      .flatMap(parseMrkdwn)
-      .join('');
+  // adding support for interleaved code blocks.
+  // this will result in a larger number of elements returned
 
-    if (element.ordered) {
-      index += 1;
-      return `${index}. ${text}`;
-    } else if (item.checked !== null && item.checked !== undefined) {
-      return `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
-    } else {
-      return `• ${text}`;
-    }
+  const sections: SectionBlock[] = [];
+  let textTokens: string[] = [];
+
+  element.items.forEach(item => {
+    item.tokens.forEach(token => {
+      if (token?.type === 'code') {
+        // put all accrued text tokens in section and add another section for the code
+
+        const text = textTokens.join('\n');
+        if (text && text.length > 0) {
+          sections.push(section(text));
+        }
+        textTokens = [];
+        sections.push(parseCode(token));
+      } else {
+        // acrue text tokens
+        const paragraph = token as marked.Tokens.Text;
+
+        if (
+          !paragraph ||
+          paragraph.type !== 'text' ||
+          !paragraph.tokens?.length
+        ) {
+          return paragraph?.text || '';
+        }
+
+        const itemText = paragraph.tokens
+          .filter(
+            (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
+              child.type !== 'image'
+          )
+          .flatMap(parseMrkdwn)
+          .join('');
+
+        if (element.ordered) {
+          index += 1;
+          textTokens.push(`${index}. ${itemText}`);
+        } else if (item.checked !== null && item.checked !== undefined) {
+          textTokens.push(
+            `${options.checkboxPrefix?.(item.checked) ?? '• '}${itemText}`
+          );
+        } else {
+          textTokens.push(`• ${itemText}`);
+        }
+      }
+      return;
+    });
+    return;
   });
 
-  return section(contents.join('\n'));
+  const text = textTokens.join('\n');
+  if (text && text.length > 0) {
+    sections.push(section(text));
+  }
+
+  return sections;
+
+  // const contents = element.items.map(item => {
+
+  //   console.log(`item: ${JSON.stringify(item)}`);
+
+  //   let result = '';
+
+  //   const childTokens = item.tokens;
+
+  //   result += childTokens.map((token) => {
+
+  //     if (token?.type == 'code') {
+  //       return parseCode(token);
+  //     }
+
+  //   const paragraph = token as marked.Tokens.Text;
+
+  //   if (!paragraph || paragraph.type !== 'text' || !paragraph.tokens?.length) {
+  //     return paragraph?.text || '';
+  //   }
+
+  //   const text = paragraph.tokens
+  //     .filter(
+  //       (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
+  //         child.type !== 'image'
+  //     )
+  //     .flatMap(parseMrkdwn)
+  //     .join('');
+
+  //   if (element.ordered) {
+  //     index += 1;
+  //     return `${index}. ${text}`;
+  //   } else if (item.checked !== null && item.checked !== undefined) {
+  //     return `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
+  //   } else {
+  //     return `• ${text}`;
+  //   }
+  // });
+  // return result;
 }
 
 function combineBetweenPipes(texts: String[]): string {
@@ -274,7 +348,7 @@ function parseToken(
       return parseBlockquote(token);
 
     case 'list':
-      return [parseList(token, options.lists)];
+      return parseList(token, options.lists);
 
     case 'table':
       return [parseTable(token)];

@@ -125,6 +125,98 @@ if (a === 'hi') {
 
       expect(actual).toStrictEqual(expected);
     });
+
+    it('should parse code blocks in lists', async () => {
+      const text = `1. **Some title in bold:**
+\`\`\`javascript
+if (a === 'hi') {
+  console.log('hi!')
+} else {
+  console.log('hello')
+}
+\`\`\`
+2. **Title 2 in bold:**
+\`\`\`javascript
+if (a === 'hi') {
+  console.log('hi!')
+} else {
+  console.log('hello')
+}
+\`\`\``;
+
+      const actual = await markdownToBlocks(text);
+
+      const expected = [
+        slack.section('1. *Some title in bold:*'),
+        slack.section(
+          `\`\`\`
+if (a === 'hi') {
+  console.log('hi!')
+} else {
+  console.log('hello')
+}
+\`\`\``
+        ),
+        slack.section('2. *Title 2 in bold:*'),
+        slack.section(
+          `\`\`\`
+if (a === 'hi') {
+  console.log('hi!')
+} else {
+  console.log('hello')
+}
+\`\`\``
+        ),
+      ];
+
+      expect(actual).toStrictEqual(expected);
+    });
+  });
+
+  it('should parse code blocks in a list with one item', async () => {
+    const text = `1. **Some title in bold:**
+\`\`\`javascript
+if (a === 'hi') {
+console.log('hi!')
+} else {
+console.log('hello')
+}
+\`\`\`
+2. **Title 2 in bold:**
+\`\`\`javascript
+if (a === 'hi') {
+console.log('hi!')
+} else {
+console.log('hello')
+}
+\`\`\``;
+
+    const actual = await markdownToBlocks(text);
+
+    const expected = [
+      slack.section('1. *Some title in bold:*'),
+      slack.section(
+        `\`\`\`
+if (a === 'hi') {
+console.log('hi!')
+} else {
+console.log('hello')
+}
+\`\`\``
+      ),
+      slack.section('2. *Title 2 in bold:*'),
+      slack.section(
+        `\`\`\`
+if (a === 'hi') {
+console.log('hi!')
+} else {
+console.log('hello')
+}
+\`\`\``
+      ),
+    ];
+
+    expect(actual).toStrictEqual(expected);
   });
 
   it('should correctly escape text', async () => {
