@@ -130,10 +130,13 @@ function parsePhrasingContent(
 }
 
 function parseParagraph(element: marked.Tokens.Paragraph): KnownBlock[] {
-  return element.tokens.reduce((accumulator, child) => {
-    parsePhrasingContent(child as PhrasingToken, accumulator);
-    return accumulator;
-  }, [] as (SectionBlock | ImageBlock)[]);
+  return element.tokens.reduce(
+    (accumulator, child) => {
+      parsePhrasingContent(child as PhrasingToken, accumulator);
+      return accumulator;
+    },
+    [] as (SectionBlock | ImageBlock)[]
+  );
 }
 
 function parseHeading(element: marked.Tokens.Heading): HeaderBlock {
@@ -164,7 +167,7 @@ function parseList(
 
   element.items.forEach(item => {
     console.log(`index: ${elemIndex}, item: ${JSON.stringify(item)}`);
-    
+
     item.tokens.forEach(token => {
       if (token?.type === 'code') {
         // put all accrued text tokens in section and add another section for the code
@@ -177,7 +180,6 @@ function parseList(
         sections.push(parseCode(token));
         return;
       } else {
-
         // acrue text tokens
         const paragraph = token as marked.Tokens.Text;
 
