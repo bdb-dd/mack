@@ -152,15 +152,19 @@ function parseList(
   element: marked.Tokens.List,
   options: ListOptions = {}
 ): SectionBlock[] {
-  let index = 0;
+  let elemIndex = typeof element.start === 'number' ? element.start : 0;
 
   // adding support for interleaved code blocks.
   // this will result in a larger number of elements returned
+
+  console.log(`element: ${JSON.stringify(element)}`);
 
   const sections: SectionBlock[] = [];
   let textTokens: string[] = [];
 
   element.items.forEach(item => {
+    console.log(`index: ${elemIndex}, item: ${JSON.stringify(item)}`);
+    
     item.tokens.forEach(token => {
       if (token?.type === 'code') {
         // put all accrued text tokens in section and add another section for the code
@@ -171,7 +175,9 @@ function parseList(
         }
         textTokens = [];
         sections.push(parseCode(token));
+        return;
       } else {
+
         // acrue text tokens
         const paragraph = token as marked.Tokens.Text;
 
@@ -180,7 +186,8 @@ function parseList(
           paragraph.type !== 'text' ||
           !paragraph.tokens?.length
         ) {
-          return paragraph?.text || '';
+          textTokens.push(paragraph?.text || '');
+          return;
         }
 
         const itemText = paragraph.tokens
@@ -192,8 +199,8 @@ function parseList(
           .join('');
 
         if (element.ordered) {
-          index += 1;
-          textTokens.push(`${index}. ${itemText}`);
+          textTokens.push(`${elemIndex}. ${itemText}`);
+          elemIndex += 1;
         } else if (item.checked !== null && item.checked !== undefined) {
           textTokens.push(
             `${options.checkboxPrefix?.(item.checked) ?? '• '}${itemText}`
