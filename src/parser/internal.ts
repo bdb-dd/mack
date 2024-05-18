@@ -7,7 +7,7 @@ import {
 } from '@slack/types';
 import {ListOptions, ParsingOptions} from '../types';
 import {section, divider, header, image} from '../slack';
-import {marked} from 'marked';
+import marked from 'marked';
 import {XMLParser} from 'fast-xml-parser';
 
 type PhrasingToken =
@@ -120,7 +120,7 @@ function parsePhrasingContent(
     const imageBlock: ImageBlock = image(
       element.href,
       element.text || element.title || element.href,
-      element.title
+      element.title || ''
     );
     accumulator.push(imageBlock);
   } else {
@@ -177,7 +177,7 @@ function parseList(
           sections.push(section(text));
         }
         textTokens = [];
-        sections.push(parseCode(token));
+        sections.push(parseCode(token as marked.Tokens.Code));
         return;
       } else {
         // acrue text tokens
@@ -222,45 +222,6 @@ function parseList(
   }
 
   return sections;
-
-  // const contents = element.items.map(item => {
-
-  //   console.log(`item: ${JSON.stringify(item)}`);
-
-  //   let result = '';
-
-  //   const childTokens = item.tokens;
-
-  //   result += childTokens.map((token) => {
-
-  //     if (token?.type == 'code') {
-  //       return parseCode(token);
-  //     }
-
-  //   const paragraph = token as marked.Tokens.Text;
-
-  //   if (!paragraph || paragraph.type !== 'text' || !paragraph.tokens?.length) {
-  //     return paragraph?.text || '';
-  //   }
-
-  //   const text = paragraph.tokens
-  //     .filter(
-  //       (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
-  //         child.type !== 'image'
-  //     )
-  //     .flatMap(parseMrkdwn)
-  //     .join('');
-
-  //   if (element.ordered) {
-  //     index += 1;
-  //     return `${index}. ${text}`;
-  //   } else if (item.checked !== null && item.checked !== undefined) {
-  //     return `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
-  //   } else {
-  //     return `• ${text}`;
-  //   }
-  // });
-  // return result;
 }
 
 function combineBetweenPipes(texts: String[]): string {
@@ -345,28 +306,28 @@ function parseToken(
 ): KnownBlock[] {
   switch (token.type) {
     case 'heading':
-      return [parseHeading(token)];
+      return [parseHeading(token as marked.Tokens.Heading)];
 
     case 'paragraph':
-      return parseParagraph(token);
+      return parseParagraph(token as marked.Tokens.Paragraph);
 
     case 'code':
-      return [parseCode(token)];
+      return [parseCode(token as marked.Tokens.Code)];
 
     case 'blockquote':
-      return parseBlockquote(token);
+      return parseBlockquote(token as marked.Tokens.Blockquote);
 
     case 'list':
-      return parseList(token, options.lists);
+      return parseList(token as marked.Tokens.List, options.lists);
 
     case 'table':
-      return [parseTable(token)];
+      return [parseTable(token as marked.Tokens.Table)];
 
     case 'hr':
       return [parseThematicBreak()];
 
     case 'html':
-      return parseHTML(token);
+      return parseHTML(token as marked.Tokens.HTML);
 
     default:
       return [];
