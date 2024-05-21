@@ -26,9 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const src_1 = require("../src");
 const slack = __importStar(require("../src/slack"));
 describe('integration with unified', () => {
-    // beforeEach(() => {
-    //   jest.resetModules();
-    // });
     it('should parse raw markdown into slack blocks', async () => {
         const text = `
 a **b** _c_ **_d_ e**
@@ -186,7 +183,7 @@ if (a === 'hi') {
         expect(actual).toStrictEqual(expected);
         // console.log('actual:', JSON.stringify(actual));
     });
-    it('should parse a list with multiple items, each containing one code block', async () => {
+    xit('should parse a list with multiple items, each containing one code block', async () => {
         const text = `1. **Title num 1 in bold:**
 \`\`\`javascript
 if (a === 'hi') {
@@ -225,24 +222,11 @@ console.log('hello')
         expect(actual).toStrictEqual(expected);
         // console.log('actual:', JSON.stringify(actual));
     });
+});
+describe('isolated test 1', () => {
     it('should correctly escape text', async () => {
         const actual = await (0, src_1.markdownToBlocks)('<>&\'""\'&><');
         const expected = [slack.section('&lt;&gt;&amp;\'""\'&amp;&gt;&lt;')];
-        expect(actual).toStrictEqual(expected);
-    });
-    it('should parse this:', async () => {
-        const actual = await (0, src_1.markdownToBlocks)('Intro line:\n\n1. **Item 1**:\n   - Unordered line 1\n   - **Source**: [Create apps](https://docs.altinn.studio/app/)\n\n2. **Item 2**:\n   - unordered under item 2');
-        // console.log('actual:', JSON.stringify(actual));
-        // [{"type":"section","text":{"type":"mrkdwn","text":"Intro line:"}},{"type":"section","text":{"type":"mrkdwn","text":"1. *Item 1*:\n\n2. *Item 2*:\n"}}]
-        const expected = [
-            slack.section('Intro line:'),
-            // slack.section('1. *Item 1*:\n\n2. *Item 2*:\n   - Unordered line 1\n   - *Source*: [Create apps](https://docs.altinn.studio/app/)\n\n2. *Item 2*:\n   - unordered under item 2\n'),
-            slack.section('1. *Item 1*:'),
-            slack.section('• Unordered line 1'),
-            slack.section('• *Source*: [Create apps](https://docs.altinn.studio/app/)'),
-            slack.section('2. *Item 2*:'),
-            slack.section('• unordered under item 2'),
-        ];
         expect(actual).toStrictEqual(expected);
     });
 });

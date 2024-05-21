@@ -12,6 +12,74 @@ describe('parser', () => {
     expect(actual).toStrictEqual(expected);
   });
 
+  it('should parse links in ordered list', () => {
+    const tokens = marked.lexer('1. **Source**: [link](https://example.com)');
+    const actual = parseBlocks(tokens);
+
+    const expected = [
+      slack.section('1. *Source*: <https://example.com|link> '),
+    ];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should parse links in unordered list', () => {
+    const tokens = marked.lexer('   - **Source**: [link](https://example.com)');
+    const actual = parseBlocks(tokens);
+
+    const expected = [slack.section('• *Source*: <https://example.com|link> ')];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should parse links in unordered lists, nested in ordered lists', () => {
+    const tokens = marked.lexer(
+      'Intro line:\n\n1. Item 1 [link](https://example.com)\n   - Unordered [link](https://example.com)\n   - **Unordered**: [link](https://example.com)\n2. **Item 2** [link](https://example.com)\n   - unordered: [link](https://example.com)'
+    );
+    const actual = parseBlocks(tokens);
+
+    const expected = [
+      slack.section('Intro line:'),
+      slack.section('1. Item 1 <https://example.com|link> '),
+      slack.section('• Unordered <https://example.com|link> '),
+      slack.section('• *Unordered*: <https://example.com|link> '),
+      slack.section('2. *Item 2* <https://example.com|link> '),
+      slack.section('• unordered: <https://example.com|link> '),
+    ];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should parse link with label', () => {
+    const tokens = marked.lexer(' **Source**: [link](https://example.com)');
+    const actual = parseBlocks(tokens);
+
+    const expected = [slack.section(' *Source*: <https://example.com|link> ')];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should parse ordered lists with unordered sublists and links:', async () => {
+    const tokens = marked.lexer(
+      'Intro line:\n\n1. **Item 1**: [Create apps](https://docs.altinn.studio/app/)\n\n   - Unordered line 1\n   - **Source**: [Create apps](https://docs.altinn.studio/app/)\n\n2. **Item 2**:\n   - unordered under item 2'
+    );
+    const actual = parseBlocks(tokens);
+
+    const expected = [
+      slack.section('Intro line:'),
+      slack.section(
+        '1. *Item 1*: <https://docs.altinn.studio/app/|Create apps> '
+      ),
+      slack.section('• Unordered line 1'),
+      slack.section(
+        '• *Source*: <https://docs.altinn.studio/app/|Create apps> '
+      ),
+      slack.section('2. *Item 2*:'),
+      slack.section('• unordered under item 2'),
+    ];
+    expect(actual).toStrictEqual(expected);
+  });
+
   it('should parse header', () => {
     const tokens = marked.lexer('# a');
     const actual = parseBlocks(tokens);
