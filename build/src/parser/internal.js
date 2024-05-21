@@ -98,88 +98,40 @@ function parseCode(element) {
     return (0, slack_1.section)(`\`\`\`\n${element.text}\n\`\`\``);
 }
 function parseList(element, options = {}) {
-    let elemIndex = typeof element.start === 'number' ? element.start : 0;
-    // adding support for interleaved code blocks.
-    // this will result in a larger number of elements returned
-    console.log(`element: ${JSON.stringify(element)}`);
-    const sections = [];
-    let textTokens = [];
-    element.items.forEach(item => {
-        console.log(`index: ${elemIndex}, item: ${JSON.stringify(item)}`);
-        item.tokens.forEach(token => {
-            var _a, _b, _c;
-            if ((token === null || token === void 0 ? void 0 : token.type) === 'code') {
-                // put all accrued text tokens in section and add another section for the code
-                const text = textTokens.join('\n');
-                if (text && text.length > 0) {
-                    sections.push((0, slack_1.section)(text));
-                }
-                textTokens = [];
-                sections.push(parseCode(token));
-                return;
-            }
-            else {
-                // acrue text tokens
-                const paragraph = token;
-                if (!paragraph ||
-                    paragraph.type !== 'text' ||
-                    !((_a = paragraph.tokens) === null || _a === void 0 ? void 0 : _a.length)) {
-                    textTokens.push((paragraph === null || paragraph === void 0 ? void 0 : paragraph.text) || '');
-                    return;
-                }
-                const itemText = paragraph.tokens
-                    .filter((child) => child.type !== 'image')
-                    .flatMap(parseMrkdwn)
-                    .join('');
-                if (element.ordered) {
-                    textTokens.push(`${elemIndex}. ${itemText}`);
-                    elemIndex += 1;
-                }
-                else if (item.checked !== null && item.checked !== undefined) {
-                    textTokens.push(`${(_c = (_b = options.checkboxPrefix) === null || _b === void 0 ? void 0 : _b.call(options, item.checked)) !== null && _c !== void 0 ? _c : '• '}${itemText}`);
-                }
-                else {
-                    textTokens.push(`• ${itemText}`);
-                }
-            }
-            return;
+    let index = 0;
+    const sections = element.items.map(item => {
+        // console.log('index: ', index, ' element.item: ', JSON.stringify(item));
+        var _a, _b, _c, _d;
+        let selfText = '';
+        // first child token should always be a valid Mrkdwn text token, will assume so
+        const paragraph = item.tokens[0];
+        if (!paragraph || paragraph.type !== 'text' || !((_a = paragraph.tokens) === null || _a === void 0 ? void 0 : _a.length)) {
+            selfText = (paragraph === null || paragraph === void 0 ? void 0 : paragraph.text) || '';
+        }
+        const text = ((_b = paragraph.tokens) !== null && _b !== void 0 ? _b : [])
+            .filter((child) => child.type !== 'image')
+            .flatMap(parseMrkdwn)
+            .join('');
+        if (element.ordered) {
+            index += 1;
+            const currentIndex = Math.max(index, typeof element.start === 'number' ? element.start : 0);
+            selfText = `${currentIndex}. ${text}`;
+            // selfText = `${element.start}. ${text}`;
+        }
+        else if (item.checked !== null && item.checked !== undefined) {
+            selfText = `${(_d = (_c = options.checkboxPrefix) === null || _c === void 0 ? void 0 : _c.call(options, item.checked)) !== null && _d !== void 0 ? _d : '• '}${text}`;
+        }
+        else {
+            selfText = `• ${text}`;
+        }
+        // console.log(`selfText: ${selfText}`)
+        // now, we need to check the other children and add additional sections
+        const childSections = item.tokens.slice(1).flatMap(token => {
+            return parseToken(token, {});
         });
-        return;
+        return [(0, slack_1.section)(selfText), ...childSections];
     });
-    const text = textTokens.join('\n');
-    if (text && text.length > 0) {
-        sections.push((0, slack_1.section)(text));
-    }
-    return sections;
-    // const contents = element.items.map(item => {
-    //   console.log(`item: ${JSON.stringify(item)}`);
-    //   let result = '';
-    //   const childTokens = item.tokens;
-    //   result += childTokens.map((token) => {
-    //     if (token?.type == 'code') {
-    //       return parseCode(token);
-    //     }
-    //   const paragraph = token as marked.Tokens.Text;
-    //   if (!paragraph || paragraph.type !== 'text' || !paragraph.tokens?.length) {
-    //     return paragraph?.text || '';
-    //   }
-    //   const text = paragraph.tokens
-    //     .filter(
-    //       (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
-    //         child.type !== 'image'
-    //     )
-    //     .flatMap(parseMrkdwn)
-    //     .join('');
-    //   if (element.ordered) {
-    //     index += 1;
-    //     return `${index}. ${text}`;
-    //   } else if (item.checked !== null && item.checked !== undefined) {
-    //     return `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
-    //   } else {
-    //     return `• ${text}`;
-    //   }
-    // });
-    // return result;
+    return sections.flat();
 }
 function combineBetweenPipes(texts) {
     return `| ${texts.join(' | ')} |`;
@@ -254,6 +206,7 @@ function parseToken(token, options) {
         case 'blockquote':
             return parseBlockquote(token);
         case 'list':
+            console.log(`list: ${JSON.stringify(token)}`);
             return parseList(token, options.lists);
         case 'table':
             return [parseTable(token)];

@@ -48,9 +48,12 @@ describe('parser', () => {
     const actual = parseBlocks(tokens);
 
     const expected = [
-      slack.section('1. a\n2. b'),
-      slack.section('• c\n• d'),
-      slack.section('• e\n• f'),
+      slack.section('1. a'),
+      slack.section('2. b'),
+      slack.section('• c'),
+      slack.section('• d'),
+      slack.section('• e'),
+      slack.section('• f'),
     ];
 
     expect(actual).toStrictEqual(expected);

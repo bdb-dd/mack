@@ -154,74 +154,52 @@ function parseCode(element: marked.Tokens.Code): SectionBlock {
 function parseList(
   element: marked.Tokens.List,
   options: ListOptions = {}
-): SectionBlock[] {
-  let elemIndex = typeof element.start === 'number' ? element.start : 0;
+): KnownBlock[] {
+  let index = 0;
+  const sections = element.items.map(item => {
+    // console.log('index: ', index, ' element.item: ', JSON.stringify(item));
 
-  // adding support for interleaved code blocks.
-  // this will result in a larger number of elements returned
+    let selfText = '';
 
-  console.log(`element: ${JSON.stringify(element)}`);
+    // first child token should always be a valid Mrkdwn text token, will assume so
+    const paragraph = item.tokens[0] as marked.Tokens.Text;
+    if (!paragraph || paragraph.type !== 'text' || !paragraph.tokens?.length) {
+      selfText = paragraph?.text || '';
+    }
 
-  const sections: SectionBlock[] = [];
-  let textTokens: string[] = [];
+    const text = (paragraph.tokens ?? [])
+      .filter(
+        (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
+          child.type !== 'image'
+      )
+      .flatMap(parseMrkdwn)
+      .join('');
 
-  element.items.forEach(item => {
-    console.log(`index: ${elemIndex}, item: ${JSON.stringify(item)}`);
+    if (element.ordered) {
+      index += 1;
+      const currentIndex = Math.max(
+        index,
+        typeof element.start === 'number' ? element.start : 0
+      );
+      selfText = `${currentIndex}. ${text}`;
+      // selfText = `${element.start}. ${text}`;
+    } else if (item.checked !== null && item.checked !== undefined) {
+      selfText = `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
+    } else {
+      selfText = `• ${text}`;
+    }
 
-    item.tokens.forEach(token => {
-      if (token?.type === 'code') {
-        // put all accrued text tokens in section and add another section for the code
+    // console.log(`selfText: ${selfText}`)
 
-        const text = textTokens.join('\n');
-        if (text && text.length > 0) {
-          sections.push(section(text));
-        }
-        textTokens = [];
-        sections.push(parseCode(token as marked.Tokens.Code));
-        return;
-      } else {
-        // acrue text tokens
-        const paragraph = token as marked.Tokens.Text;
-
-        if (
-          !paragraph ||
-          paragraph.type !== 'text' ||
-          !paragraph.tokens?.length
-        ) {
-          textTokens.push(paragraph?.text || '');
-          return;
-        }
-
-        const itemText = paragraph.tokens
-          .filter(
-            (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
-              child.type !== 'image'
-          )
-          .flatMap(parseMrkdwn)
-          .join('');
-
-        if (element.ordered) {
-          textTokens.push(`${elemIndex}. ${itemText}`);
-          elemIndex += 1;
-        } else if (item.checked !== null && item.checked !== undefined) {
-          textTokens.push(
-            `${options.checkboxPrefix?.(item.checked) ?? '• '}${itemText}`
-          );
-        } else {
-          textTokens.push(`• ${itemText}`);
-        }
-      }
-      return;
+    // now, we need to check the other children and add additional sections
+    const childSections = item.tokens.slice(1).flatMap(token => {
+      return parseToken(token, {});
     });
-    return;
+
+    return [section(selfText), ...childSections];
   });
 
-  const text = textTokens.join('\n');
-  if (text && text.length > 0) {
-    sections.push(section(text));
-  }
-
-  return sections;
+  return sections.flat();
 }
 
 function combineBetweenPipes(texts: String[]): string {
@@ -318,6 +296,8 @@ function parseToken(
       return parseBlockquote(token as marked.Tokens.Blockquote);
 
     case 'list':
+      console.log(`list: ${JSON.stringify(token)}`);
+
       return parseList(token as marked.Tokens.List, options.lists);
 
     case 'table':
