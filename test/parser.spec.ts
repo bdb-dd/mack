@@ -80,6 +80,20 @@ describe('parser', () => {
     expect(actual).toStrictEqual(expected);
   });
 
+  it('should parse ordered lists with unordered sublists and links:', async () => {
+    const tokens = marked.lexer(
+      '- This [access management guide](https://docs.altinn.studio/app/guides/access-management/studio/).'
+    );
+    const actual = parseBlocks(tokens);
+
+    const expected = [
+      slack.section(
+        '• This <https://docs.altinn.studio/app/guides/access-management/studio/|access management guide> .'
+      ),
+    ];
+    expect(actual).toStrictEqual(expected);
+  });
+
   it('should parse header', () => {
     const tokens = marked.lexer('# a');
     const actual = parseBlocks(tokens);

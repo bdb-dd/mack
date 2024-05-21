@@ -17,4 +17,4 @@ import type { ParsingOptions } from './types';
  * @param body any Markdown or GFM content
  * @param options options to configure the parser
  */
-export declare function markdownToBlocks(body: string, options?: ParsingOptions): Promise<KnownBlock[]>;
+export declare function markdownToBlocks(body: string, options?: ParsingOptions): KnownBlock[];

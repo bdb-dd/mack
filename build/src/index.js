@@ -20,7 +20,7 @@ const marked_1 = require("marked");
  * @param body any Markdown or GFM content
  * @param options options to configure the parser
  */
-async function markdownToBlocks(body, options = {}) {
+function markdownToBlocks(body, options = {}) {
     // Slack only wants &, <, and > escaped
     // https://api.slack.com/reference/surfaces/formatting#escaping
     const replacements = {

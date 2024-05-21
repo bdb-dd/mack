@@ -25,17 +25,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const src_1 = require("../src");
 const slack = __importStar(require("../src/slack"));
-describe('iolated test 1', () => {
-    it('should parse ordered lists with unordered sublists and links:', () => {
-        const actual = (0, src_1.markdownToBlocks)('1. **Item 1**:\n   - Unordered line 1\n   - **A**: [Create apps](https://docs.altinn.studio/app/)\n\n2. **Item 2**:\n   - unordered under item 2');
+describe('iolated test 2', () => {
+    it('should parse links in generic markdown:', () => {
+        const actual = (0, src_1.markdownToBlocks)('- This [access management guide](https://docs.altinn.studio/app/guides/access-management/studio/).');
         const expected = [
-            slack.section('1. *Item 1*:'),
-            slack.section('• Unordered line 1'),
-            slack.section('• *A*: <https://docs.altinn.studio/app/|Create apps> '),
-            slack.section('2. *Item 2*:'),
-            slack.section('• unordered under item 2'),
+            slack.section('• This <https://docs.altinn.studio/app/guides/access-management/studio/|access management guide> .'),
         ];
         expect(actual).toStrictEqual(expected);
     });
 });
-//# sourceMappingURL=unstable.spec.js.map
+//# sourceMappingURL=unstable2.spec.js.map
