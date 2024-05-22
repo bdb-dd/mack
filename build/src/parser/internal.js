@@ -99,16 +99,20 @@ function parseCode(element) {
 }
 function parseList(element, options = {}) {
     let index = 0;
-    const sections = element.items.map(item => {
+    const sections = element.items
+        .filter(item => item !== null)
+        .map(item => {
         // console.log('index: ', index, ' element.item: ', JSON.stringify(item));
         var _a, _b, _c, _d;
         let selfText = '';
         // first child token should always be a valid Mrkdwn text token, will assume so
         const paragraph = item.tokens[0];
-        if (!paragraph || paragraph.type !== 'text' || !((_a = paragraph.tokens) === null || _a === void 0 ? void 0 : _a.length)) {
+        if (!paragraph ||
+            paragraph.type !== 'text' ||
+            !((_a = paragraph.tokens) === null || _a === void 0 ? void 0 : _a.length)) {
             selfText = (paragraph === null || paragraph === void 0 ? void 0 : paragraph.text) || '';
         }
-        const text = ((_b = paragraph.tokens) !== null && _b !== void 0 ? _b : [])
+        const text = ((_b = paragraph === null || paragraph === void 0 ? void 0 : paragraph.tokens) !== null && _b !== void 0 ? _b : [])
             .filter((child) => child.type !== 'image')
             .flatMap(parseMrkdwn)
             .join('');
@@ -124,7 +128,6 @@ function parseList(element, options = {}) {
         else {
             selfText = `• ${text}`;
         }
-        // console.log(`selfText: ${selfText}`)
         // now, we need to check the other children and add additional sections
         const childSections = item.tokens.slice(1).flatMap(token => {
             return parseToken(token, {});

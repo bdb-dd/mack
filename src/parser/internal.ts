@@ -156,48 +156,53 @@ function parseList(
   options: ListOptions = {}
 ): KnownBlock[] {
   let index = 0;
-  const sections = element.items.map(item => {
-    // console.log('index: ', index, ' element.item: ', JSON.stringify(item));
 
-    let selfText = '';
+  const sections = element.items
+    .filter(item => item !== null)
+    .map(item => {
+      // console.log('index: ', index, ' element.item: ', JSON.stringify(item));
 
-    // first child token should always be a valid Mrkdwn text token, will assume so
-    const paragraph = item.tokens[0] as marked.Tokens.Text;
-    if (!paragraph || paragraph.type !== 'text' || !paragraph.tokens?.length) {
-      selfText = paragraph?.text || '';
-    }
+      let selfText = '';
 
-    const text = (paragraph.tokens ?? [])
-      .filter(
-        (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
-          child.type !== 'image'
-      )
-      .flatMap(parseMrkdwn)
-      .join('');
+      // first child token should always be a valid Mrkdwn text token, will assume so
+      const paragraph = item.tokens[0] as marked.Tokens.Text;
+      if (
+        !paragraph ||
+        paragraph.type !== 'text' ||
+        !paragraph.tokens?.length
+      ) {
+        selfText = paragraph?.text || '';
+      }
 
-    if (element.ordered) {
-      index += 1;
-      const currentIndex = Math.max(
-        index,
-        typeof element.start === 'number' ? element.start : 0
-      );
-      selfText = `${currentIndex}. ${text}`;
-      // selfText = `${element.start}. ${text}`;
-    } else if (item.checked !== null && item.checked !== undefined) {
-      selfText = `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
-    } else {
-      selfText = `• ${text}`;
-    }
+      const text = (paragraph?.tokens ?? [])
+        .filter(
+          (child): child is Exclude<PhrasingToken, marked.Tokens.Image> =>
+            child.type !== 'image'
+        )
+        .flatMap(parseMrkdwn)
+        .join('');
 
-    // console.log(`selfText: ${selfText}`)
+      if (element.ordered) {
+        index += 1;
+        const currentIndex = Math.max(
+          index,
+          typeof element.start === 'number' ? element.start : 0
+        );
+        selfText = `${currentIndex}. ${text}`;
+        // selfText = `${element.start}. ${text}`;
+      } else if (item.checked !== null && item.checked !== undefined) {
+        selfText = `${options.checkboxPrefix?.(item.checked) ?? '• '}${text}`;
+      } else {
+        selfText = `• ${text}`;
+      }
 
-    // now, we need to check the other children and add additional sections
-    const childSections = item.tokens.slice(1).flatMap(token => {
-      return parseToken(token, {});
+      // now, we need to check the other children and add additional sections
+      const childSections = item.tokens.slice(1).flatMap(token => {
+        return parseToken(token, {});
+      });
+
+      return [section(selfText), ...childSections];
     });
-
-    return [section(selfText), ...childSections];
-  });
 
   return sections.flat();
 }
