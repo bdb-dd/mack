@@ -296,7 +296,7 @@ function parseToken(
       return parseBlockquote(token as marked.Tokens.Blockquote);
 
     case 'list':
-      console.log(`list: ${JSON.stringify(token)}`);
+      // console.log(`list: ${JSON.stringify(token)}`);
 
       return parseList(token as marked.Tokens.List, options.lists);
 

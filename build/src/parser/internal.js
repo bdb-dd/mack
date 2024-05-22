@@ -206,7 +206,7 @@ function parseToken(token, options) {
         case 'blockquote':
             return parseBlockquote(token);
         case 'list':
-            console.log(`list: ${JSON.stringify(token)}`);
+            // console.log(`list: ${JSON.stringify(token)}`);
             return parseList(token, options.lists);
         case 'table':
             return [parseTable(token)];
