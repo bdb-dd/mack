@@ -1,0 +1,8 @@
+[tools]
+# gives us yarn out of the box
+yarn = "4.14.1"
+
+[env]
+
+# ensures correct package manager activated
+FNM_COREPACK_ENABLED=1

@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.image = exports.header = exports.divider = exports.section = void 0;
+exports.section = section;
+exports.divider = divider;
+exports.header = header;
+exports.image = image;
 const MAX_TEXT_LENGTH = 3000;
 const MAX_HEADER_LENGTH = 150;
 const MAX_IMAGE_TITLE_LENGTH = 2000;
@@ -14,13 +17,11 @@ function section(text) {
         },
     };
 }
-exports.section = section;
 function divider() {
     return {
         type: 'divider',
     };
 }
-exports.divider = divider;
 function header(text) {
     return {
         type: 'header',
@@ -30,7 +31,6 @@ function header(text) {
         },
     };
 }
-exports.header = header;
 function image(url, altText, title) {
     return {
         type: 'image',
@@ -44,5 +44,4 @@ function image(url, altText, title) {
             : undefined,
     };
 }
-exports.image = image;
 //# sourceMappingURL=slack.js.map

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markdownToBlocks = void 0;
+exports.markdownToBlocks = markdownToBlocks;
 const internal_1 = require("./parser/internal");
 const marked_1 = require("marked");
 /**
@@ -43,5 +43,4 @@ function markdownToBlocks(body, options = {}) {
     const tokens = lexer.lex(body);
     return (0, internal_1.parseBlocks)(tokens, options);
 }
-exports.markdownToBlocks = markdownToBlocks;
 //# sourceMappingURL=index.js.map

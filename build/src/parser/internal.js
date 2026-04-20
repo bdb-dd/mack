@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseBlocks = void 0;
+exports.parseBlocks = parseBlocks;
 const slack_1 = require("../slack");
 const fast_xml_parser_1 = require("fast-xml-parser");
 function parsePlainText(element) {
@@ -224,5 +224,4 @@ function parseToken(token, options) {
 function parseBlocks(tokens, options = {}) {
     return tokens.flatMap(token => parseToken(token, options));
 }
-exports.parseBlocks = parseBlocks;
 //# sourceMappingURL=internal.js.map
